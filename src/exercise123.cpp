@@ -17,6 +17,7 @@
 //
 #include <math.h>
 #include <algorithm>
+#include <iostream>
 
 //
 // Qt
@@ -49,9 +50,6 @@ void Exercise123::clampColor(float &r, float &g, float &b)
 // return grayscale
 float Exercise123::getGrayColor(const QColor &color)
 {
-    //////////////////////////////////////////////////
-    // Aufgabe 1 (grayscale)
-    //////////////////////////////////////////////////
     float gray = 0.0f;
 
     float wr = 0.299f;
@@ -68,9 +66,6 @@ float Exercise123::getGrayColor(const QColor &color)
 // return grayscale
 QColor Exercise123::getInvertColor(const QColor &color)
 {
-    //////////////////////////////////////////////////
-    // Aufgabe 1 (invert color)
-    //////////////////////////////////////////////////
     QColor invert;
 
     float r = 1.0f - color.redF();
@@ -80,6 +75,50 @@ QColor Exercise123::getInvertColor(const QColor &color)
     invert = QColor::fromRgbF(r, g, b);
 
     return invert;
+}
+
+bool Exercise123::inBounds(const QImage &image, int x, int y) {
+    if (x < 0 || y < 0 || x > image.width()-1 || y > image.height()-1) {
+        return false;
+    }
+    return true;
+}
+
+float Exercise123::getNearestFloat(const float &ref, const float palette[], const int &paletteSize)
+{
+    int nearestIndex = 0;
+    float minDistance = 1.0f;
+
+    for (int i = 0; i < paletteSize; i++) {
+        float distance = ref - palette[i];
+        float distanceSquared = distance * distance;
+        if (distanceSquared < minDistance) {
+            nearestIndex = i;
+            minDistance = distanceSquared;
+        }
+    }
+
+    return palette[nearestIndex];
+}
+
+QColor Exercise123::getDiffusedColor(const QColor &color, const float &weight, const float &error)
+{
+    float r = color.redF() + weight * error;
+    float g = color.greenF() + weight * error;
+    float b = color.blueF() + weight * error;
+
+    clampColor(r, g, b);
+    return QColor::fromRgbF(r, g, b);
+}
+
+void Exercise123::diffusePixel(QImage &image, int x, int y, const float &weight, const float &error) {
+    if (!inBounds(image, x, y)) {
+        return;
+    }
+
+    QColor pixel = getPixel(image, x, y);
+    QColor diffusedPixel = getDiffusedColor(pixel, weight, error);
+    image.setPixel(x, y, diffusedPixel.rgb());
 }
 
 //[-------------------------------------------------------]
@@ -182,24 +221,23 @@ QColor Exercise123::getMeanColorDynamicSize(const QImage &image, int x, int y, i
 }
 
 //getDitheringColor can work directly on image - use it
-QColor Exercise123::getDitheringColor(const QImage &image, int x, int y)
+QColor Exercise123::getDitheringColor(QImage &image, int x, int y)
 {
-    QImage intermediate(image);
-    //////////////////////////////////////////////////
-    // Aufgabe 3
-    //////////////////////////////////////////////////
+    QColor oldPixel = getPixel(image, x, y);
+    float oldGray = getGrayColor(oldPixel);
 
-    float oldpixel = 0.0f;
-    float newpixel = 0.0f;
+    float palette[] = {0.0f, 0.33f, 0.66f, 1.0f};
+    int paletteSize = 4;
 
-    //TODO: quantize oldpixel to a gray color palette with 4 entries (0.0f, 0.33f, 0.66f, 1.0f)
-    //TODO: dithering by floyd-steinberg
+    float quantizedGray = getNearestFloat(oldGray, palette, paletteSize);
+    float error = oldGray - quantizedGray;
 
+    diffusePixel(image, x+1, y, 7.0f/16, error);
+    diffusePixel(image, x-1, y+1, 3.0f/16, error);
+    diffusePixel(image, x, y+1, 5.0f/16, error);
+    diffusePixel(image, x+1, y+1, 1.0f/16, error);
 
-
-    newpixel = qBound(0.0f, newpixel, 1.0f);
-
-    return QColor::fromRgbF(newpixel, newpixel, newpixel);
+    return QColor::fromRgbF(quantizedGray, quantizedGray, quantizedGray);
 }
 
 Exercise123::Exercise123(Filter_Type type, QWidget *parent) :
