@@ -2,7 +2,7 @@
 // 3D Computergrafik
 // moodle.hpi3d.de
 // ======================================
-// 
+//
 // Sommersemester 2015 - Aufgabenblatt 1
 //                     - Aufgabe 4a
 //
@@ -12,6 +12,7 @@
 
 #include "exercise4a.h"
 #include "stable.h"
+#include <complex>
 
 //
 // Qt
@@ -33,18 +34,17 @@ const int maxIterations  = 100;
 //[-------------------------------------------------------]
 int computeIterations(float cx, float cy)
 {
-    float absSquare = 0;
-	int iterationCount = 0;
+    const std::complex<double> c(cx, cy);
+    std::complex<double> z = 0;
 
-	float x = 0, y = 0;
+    int iterations = 0;
+    const float maxAbs = sqrt(maxAbsSquare);
 
-    //////////////////////////////////////////////////////////////////////////
-    // TODO: Compute number of iterations, stored in the variable iterationsCount
-    //////////////////////////////////////////////////////////////////////////
+    for (; iterations <= maxIterations && std::abs(z) <= maxAbs; iterations++) {
+        z = z*z + c;
+    }
 
-    // ...
-
-	return iterationCount;
+	return iterations;
 }
 
 // You can use it or customize it
