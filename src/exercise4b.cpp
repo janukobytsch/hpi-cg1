@@ -124,8 +124,8 @@ void Exercise4b::drawRecursive(QPainter &painter, int x, int y, int w, int h, in
         float scaleX = 3.0f;
         float scaleY = 3.0f;
 
-        int midX = (x+w)/2;
-        int midY = (y+h)/2;
+        int midX = x + w;//(x+w)/2;
+        int midY = y + h;//(y+h)/2;
 
         float cx = ((float)(midX - origin.x()) / 800) * scaleX;
         float cy = ((float)(midY - origin.y()) / 600) * scaleY;
@@ -156,8 +156,7 @@ void Exercise4b::drawRecursive(QPainter &painter, int x, int y, int w, int h, in
 void Exercise4b::onTimer()
 {
     // Loop level-of-detail
-    mCurrentLevel++;
-    mCurrentLevel = (mCurrentLevel > 10) ? 0 : mCurrentLevel;
+    mCurrentLevel = (++mCurrentLevel > 10) ? 0 : mCurrentLevel;
 
     // Render mandelbrot with current level
     renderMandelbrot();

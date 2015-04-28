@@ -195,11 +195,10 @@ QColor Exercise123::getSobelColor(const QImage &image, int x, int y)
 
     int kernelSize = 3;
     int normalize = false;
-    QColor convolution = convolute(image, x, y, kernelX, kernelSize, normalize);
+    float sobelX = getGrayColor(convolute(image, x, y, kernelX, kernelSize, normalize));
+    float sobelY = getGrayColor(convolute(image, x, y, kernelY, kernelSize, normalize));
 
-    // TODO apply y-kernel
-
-    float c = getGrayColor(convolution);
+    float c = sqrt(sobelX * sobelX + sobelY * sobelY);
     c = qBound(0.0f, c, 1.0f);
 
     return QColor::fromRgbF(c, c, c);
