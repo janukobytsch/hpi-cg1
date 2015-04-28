@@ -41,8 +41,8 @@ class Exercise4b : public ImageView
         void onTimer();
 
 	protected:
-        QTimer              *m_timer;        /**< Timer */
-        int                  m_currentLevel;
-        int                  m_currentDir;
+        QTimer              *mTimer;        /**< Timer */
+        int                  mCurrentLevel;
+        int                  mCurrentDir;
 
 };

@@ -2,7 +2,7 @@
 // 3D Computergrafik
 // moodle.hpi3d.de
 // ======================================
-// 
+//
 // Sommersemester 2015 - Aufgabenblatt 1
 //                     - Aufgabe 4b
 //
@@ -17,6 +17,7 @@
 // std
 //
 #include <math.h>
+#include <complex>
 
 //
 // Qt
@@ -39,65 +40,60 @@ const int maxIterations  = 100;
 //[-------------------------------------------------------]
 namespace exercise4b
 {
+    int computeIterations(float cx, float cy)
+    {
+        const std::complex<double> c(cx, cy);
+        std::complex<double> z = 0;
 
-int computeIterations(float cx, float cy)
-{
-    float absSquare = 0;
-	int iterationCount = 0;
+        int iterations = 0;
+        const float maxAbs = sqrt(maxAbsSquare);
 
-	float x = 0, y = 0;
+        for (; iterations <= maxIterations && std::abs(z) <= maxAbs; iterations++) {
+            z = z*z + c;
+        }
 
-    //////////////////////////////////////////////////////////////////////////
-    // TODO: copy from implemented computeIterations() at Exercise4a
-    //////////////////////////////////////////////////////////////////////////
+        return iterations;
+    }
 
-    // ...
+    QColor chooseColor(int value, int maxValue)
+    {
+    	float p = (float)value/maxValue;
+    	int i = (int)(299 * std::min(std::max(p, 0.0f), 1.0f));
+    	int k = i / 60;
+    	float m = 1.0f * (i % 60) / 59.0f;
+    	switch (k)
+    	{
+    		case 0: return QColor(255, m*255, 0);
+    		case 1: return QColor((1-m)*255, 255, 0);
+    		case 2: return QColor(0, 255, m);
+    		case 3: return QColor(m*255, (1-m)*255, 255);
+    		case 4: return QColor((1-m)*255, 0, 255);
+    	}
 
-	return iterationCount;
-}
-
-QColor chooseColor(int value, int maxValue)
-{
-	float p = (float)value/maxValue;
-	int i = (int)(299 * std::min(std::max(p, 0.0f), 1.0f));
-	int k = i / 60;
-	float m = 1.0f * (i % 60) / 59.0f;
-	switch (k)
-	{
-		case 0: return QColor(255, m*255, 0);
-		case 1: return QColor((1-m)*255, 255, 0);
-		case 2: return QColor(0, 255, m);
-		case 3: return QColor(m*255, (1-m)*255, 255);
-		case 4: return QColor((1-m)*255, 0, 255);
-	}
-
-	return QColor(0, 0, 0);
-}
-
+    	return QColor(0, 0, 0);
+    }
 }
 
 using namespace exercise4b;
 
 Exercise4b::Exercise4b(QWidget *parent) :
     ImageView(parent),
-    m_currentLevel(0),
-    m_currentDir(1)
+    mCurrentLevel(0),
+    mCurrentDir(1)
 {
     // Render mandelbrot set (initially)
     renderMandelbrot();
 
-    //////////////////////////////////////////////////////////////////////////////
-    // TODO: 4(b) Create a QTimer here and connect it to the slot onTimer()
-    //            (in it, update m_currentLevel to count from 0 to 12 and back)
-    //////////////////////////////////////////////////////////////////////////////
-
-    // ...
+    // Initialize timer
+    mTimer = new QTimer(this);
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(onTimer()));
+    mTimer->start(500);
 }
 
 Exercise4b::~Exercise4b()
 {
     // Destroy timer
-    delete m_timer;
+    delete mTimer;
 }
 
 void Exercise4b::renderMandelbrot()
@@ -108,7 +104,10 @@ void Exercise4b::renderMandelbrot()
     QPainter painter(&mandelbrot);
 
     // Draw image using a quadtree
-    drawRecursive(painter, 0, 0, width, height, m_currentLevel);
+    drawRecursive(painter, 0, 0, width, height, mCurrentLevel);
+    // painter.setPen(QColor::fromRgbF(0,0,0));
+    // QRect rect(0,0,50,50);
+    // painter.fillRect(rect, QColor::fromRgbF(0,0,0));
 
     // Update image
     this->setImage(mandelbrot.toImage());
@@ -120,20 +119,45 @@ void Exercise4b::renderMandelbrot()
 */
 void Exercise4b::drawRecursive(QPainter &painter, int x, int y, int w, int h, int level)
 {
-    //////////////////////////////////////////////////////////////////////////
-    // TODO: Render Mandelbrot recursively for current level m_level
-    //////////////////////////////////////////////////////////////////////////
+    if (level == 0) {
+        QPoint origin(600, 250);
+        float scaleX = 3.0f;
+        float scaleY = 3.0f;
 
-    // ...
+        int midX = (x+w)/2;
+        int midY = (y+h)/2;
+
+        float cx = ((float)(midX - origin.x()) / 800) * scaleX;
+        float cy = ((float)(midY - origin.y()) / 600) * scaleY;
+
+        // Compute number of iterations
+        int iterationCount = computeIterations(cx, cy);
+
+        // Get color
+        QColor color = chooseColor(iterationCount, maxIterations);
+        painter.setPen(color);
+
+        // Draw rectangle
+        QRect rect(x, y, w, h);
+        painter.fillRect(rect, color);
+
+        return;
+    }
+
+    int width = w/2;
+    int height = h/2;
+
+    drawRecursive(painter, x, y, width, height, level-1);
+    drawRecursive(painter, x, y+height, width, h-height, level-1);
+    drawRecursive(painter, x+width, y, w-width, height, level-1);
+    drawRecursive(painter, x+width, y+height, w-width, h-height, level-1);
 }
 
 void Exercise4b::onTimer()
 {
-    //////////////////////////////////////////////////////////////////////////
-    // TODO: count level from 0 to 12 and back (ping-pong loop)
-    //////////////////////////////////////////////////////////////////////////
-
-    // ...
+    // Loop level-of-detail
+    mCurrentLevel++;
+    mCurrentLevel = (mCurrentLevel > 10) ? 0 : mCurrentLevel;
 
     // Render mandelbrot with current level
     renderMandelbrot();
