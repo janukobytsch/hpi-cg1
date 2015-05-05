@@ -4,6 +4,10 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 
+# JetBrains IDEs
+*.iml
+.idea/
+
 # C++ objects and libs
 *.slo
 *.lo
