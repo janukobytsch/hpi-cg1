@@ -44,9 +44,11 @@ void main()
     //////////////////////////////////////////////////
     
     // Nutzen sie die Variable height fuer die Hoehe
-    vec3 worldCoord = vec3(0.0, 0.0, 0.0);
+    vec3 worldCoord = vec3(position.x, position.y, height);
     
     //worldCoord = ...
+
+
 
     gl_Position = transform * vec4(worldCoord.x, 3.0 * worldCoord.y - 0.25, worldCoord.z, 1.0);
 

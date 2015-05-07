@@ -55,6 +55,7 @@ bool Exercise6::initialize()
     transferGeometryToGPU();
     m_vao.release();
 
+
     return true;
 }
 
@@ -77,11 +78,33 @@ void Exercise6::tessellate(const Triangle &triangle, std::vector<Triangle> &tria
     // Vertex 2 => triangle.x2, triangle.y2
     // Nutzen Sie triangleBuffer.push_back() um dem Ausgabeparameter triangleBuffer
     // die neuen Dreiecke hinzuzufuegen.
-    // Beachten Sie, dass für die korrekte Darstellung der (neuen) Dreiecke die Vertices
+    // Beachten Sie, dass f?r die korrekte Darstellung der (neuen) Dreiecke die Vertices
     // im Uhrzeigersinn orientiert sein muessen.
     //
     // Hinweis: Mit der Taste <w> kann zwischen Wireframe und normalem Dreiecksrendering umgeschaltet werden.
     //          Damit kann das Ergebnis der Tessellation einfacher Ueberprueft werden.
+
+    float array[4] = {triangle.x0 - triangle.x2,triangle.x1 - triangle.x2, triangle.y0 - triangle.y2, triangle.y1 - triangle.y2};
+    QMatrix2x2 t;
+    t.copyDataTo(array);
+
+    float halfpoint1[2] = {0.5,0.5};
+    float halfpoint2[2] = {0.5,0};
+    float halfpoint3[2] = {0, 0.5};
+    float r3[2] = {triangle.x2, triangle.y2};
+    QGenericMatrix<1,2,float> x0x1 = (t * QGenericMatrix<1,2,float>(halfpoint1)) - QGenericMatrix<1,2,float>(r3);
+    QGenericMatrix<1,2,float> x0x2 = (t * QGenericMatrix<1,2,float>(halfpoint2)) - QGenericMatrix<1,2,float>(r3);
+    QGenericMatrix<1,2,float> x1x2 = (t * QGenericMatrix<1,2,float>(halfpoint3)) - QGenericMatrix<1,2,float>(r3);
+
+    Triangle outputTriangle1 = Triangle(triangle.x0,triangle.y0, x0x1(0,0),x0x1(1,0),x0x2(0,0), x0x2(1,0));
+    Triangle outputTriangle2 = Triangle(x0x1(0,0),x0x1(1,0), triangle.x1, triangle.y1, x1x2(0,0),x1x2(1,0));
+    Triangle outputTriangle3 = Triangle(x1x2(0,0), x1x2(1,0), triangle.x2,triangle.y2, x0x2(0,0),x0x2(1,0));
+    Triangle outputTriangle4 = Triangle(x0x1(0,0), x0x1(1,0), x1x2(0,0),x1x2(1,0), x0x2(0,0),x0x2(1,0));
+
+    triangleBuffer.push_back(outputTriangle1);
+    triangleBuffer.push_back(outputTriangle2);
+    triangleBuffer.push_back(outputTriangle3);
+    triangleBuffer.push_back(outputTriangle4);
 
 }
 
@@ -90,10 +113,11 @@ void Exercise6::render()
     //////////////////////////////////////////////////
     // TODO: Aufgabe 6a) - drawTriangles
     //
-    // Hinweis: Hier kann neben der Lösung der Aufgabe auch mit den beiden Parametern von drawTriangles experimentiert werden, um das verhalten von OpenGL zu erkunden.
+    // Hinweis: Hier kann neben der L?sung der Aufgabe auch mit den beiden Parametern von drawTriangles experimentiert werden, um das verhalten von OpenGL zu erkunden.
     //////////////////////////////////////////////////
     
     // Nutzen Sie m_currentBuffer und drawTriangles().
+    drawTriangles(0, m_currentBuffer->size());
 }
 
 void Exercise6::drawTriangles(int start, int count)
