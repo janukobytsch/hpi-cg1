@@ -45,8 +45,6 @@ void main()
     
     // Nutzen sie die Variable height fuer die Hoehe
     vec3 worldCoord = vec3(position.x, position.y, height);
-    
-    //worldCoord = ...
 
 
 
