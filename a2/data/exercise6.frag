@@ -22,9 +22,9 @@
 // Hinweis: Die Interpolationsmodi koennen vom laufenden Programm mittels der Tasten <1>, <2> und <3> gewechselt werden.
 //////////////////////////////////////////////////
 
-in float colorValue1;
-in float colorValue2;
-in float colorValue3;
+smooth in vec3 colorValue1;
+flat in vec3 colorValue2;
+noperspective in vec3 colorValue3;
 
 out vec4 color;
 
@@ -32,15 +32,22 @@ uniform int interpolationMode;
 
 void main()
 {
-    // TODO: Farbwert auslesen (vom Modus abhaengig)
-    float colorValue = 0.0;
-    
-    //////////////////////////////////////////////////
-    // TODO: Aufgabe 6c) - Farbe berechnen
-    //////////////////////////////////////////////////
+    vec3 colorValue;
 
-    // Als Graustufenwert interpretieren
-    color = vec4(colorValue, colorValue, colorValue, 1.0);
+    switch (interpolationMode) {
+        case 1:
+            colorValue = colorValue1;
+            break;
+        case 2:
+            colorValue = colorValue2;
+            break;
+        case 3:
+            colorValue = colorValue3;
+            break;
+        default:
+            colorValue = colorValue1;
+            break;
+    }
 
-    // TODO: Interpoliert
+    color = vec4(colorValue, 1.0);
 }
