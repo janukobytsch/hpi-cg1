@@ -31,7 +31,7 @@ Exercise6::Exercise6()
     connect(m_timer, SIGNAL(timeout(void)), this, SLOT(onTimer(void)));
 
     // Hinweis: Zum Debuggen kann setSingleShot(true) gesetzt werden, um nur 1x tessellate() aufzurufen
-    m_timer->setSingleShot(true);
+    m_timer->setSingleShot(false);
     m_timer->start(1000);
 }
 
@@ -85,7 +85,6 @@ void Exercise6::tessellate(const Triangle &triangle, std::vector<Triangle> &tria
     //          Damit kann das Ergebnis der Tessellation einfacher Ueberprueft werden.
 
     float array[4] = {triangle.x0 - triangle.x2,triangle.x1 - triangle.x2, triangle.y0 - triangle.y2, triangle.y1 - triangle.y2};
-    std::cout << "11:" << array[0] << " 12:" << array[1] << " 21:" << array[2] << " 22:" << array[3] << " ";
 
     QMatrix2x2 t = QMatrix2x2(array);
 
@@ -97,11 +96,10 @@ void Exercise6::tessellate(const Triangle &triangle, std::vector<Triangle> &tria
     QGenericMatrix<1,2,float> x0x2 = (t * QGenericMatrix<1,2,float>(halfpoint2))+ QGenericMatrix<1,2,float>(r3);
     QGenericMatrix<1,2,float> x1x2 = (t * QGenericMatrix<1,2,float>(halfpoint3)) + QGenericMatrix<1,2,float>(r3);
 
-    std::cout << x0x1(0,0) << " " << x0x1(1,0) << std::endl;
 
     Triangle outputTriangle1 = Triangle(triangle.x0,triangle.y0, x0x1(0,0),x0x1(1,0),x0x2(0,0), x0x2(1,0));
     Triangle outputTriangle2 = Triangle(x0x1(0,0),x0x1(1,0), triangle.x1, triangle.y1, x1x2(0,0),x1x2(1,0));
-    Triangle outputTriangle3 = Triangle(x1x2(0,0), x1x2(1,0), x0x2(0,0),x0x2(1,0), triangle.x2,triangle.y2);
+    Triangle outputTriangle3 = Triangle(x1x2(0,0), x1x2(1,0),triangle.x2,triangle.y2, x0x2(0,0),x0x2(1,0));
     Triangle outputTriangle4 = Triangle(x0x2(0,0), x0x2(1,0), x0x1(0,0),x0x1(1,0), x1x2(0,0),x1x2(1,0));
 
     triangleBuffer.push_back(outputTriangle1);
