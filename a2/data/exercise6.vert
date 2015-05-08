@@ -64,7 +64,7 @@ void main()
     float height = getHeight(position);
 
     // Calculate world coordinates
-    vec3 worldCoord = vec3(position.x, position.y, height);
+    vec3 worldCoord = vec3(position.x, height, position.y);
     gl_Position = transform * vec4(worldCoord.x, 3.0 * worldCoord.y - 0.25, worldCoord.z, 1.0);
 
     // Assign color values
