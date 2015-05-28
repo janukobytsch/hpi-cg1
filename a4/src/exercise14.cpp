@@ -37,9 +37,9 @@ namespace
 Exercise14::Exercise14()
 : m_drawable(nullptr)
 {
-    m_angles0[0] = -50.0f;
-    m_angles0[1] = -80.0f;
-    m_angles0[2] = -80.0f;
+    m_angles0[0] = 0.0f;
+    m_angles0[1] = 0.0f;
+    m_angles0[2] = 0.0f;
 
     m_angles1[0] = 0.0f;
     m_angles1[1] = 0.0f;
@@ -62,14 +62,16 @@ Exercise14::~Exercise14()
 
 QMatrix4x4 Exercise14::interpolateEuler(const float t)
 {
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 14
-    // - Interpolate rotations by interpolating between the euler angles
-    // - hint: use the lerp method (to be defined below)
-    // - hint: use QMatrix4x4::rotate calls for applying the rotation(s)
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
     QMatrix4x4 result;
+    float angle1, angle2, angle3;
+
+    lerp(angle1, m_angles0[0], m_angles1[0], t);
+    lerp(angle2, m_angles0[1], m_angles1[1], t);
+    lerp(angle3, m_angles0[2], m_angles1[2], t);
+
+    result.rotate(angle1, 1, 0, 0);
+    result.rotate(angle2, 0, 1, 0);
+    result.rotate(angle3, 0, 0, 1);
 
     return result;
 }
@@ -92,15 +94,22 @@ QMatrix4x4 Exercise14::interpolateQuaternion(const float t)
 
 QMatrix4x4 Exercise14::interpolateMatrix(const float t)
 {
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 14
-    // - Interpolate between the elements of the matrices
-    // - hint: use the lerp method (to be defined below)
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
     QMatrix4x4 result;
+    QMatrix4x4 mat1 = eulerToMatrix(m_angles0);
+    QMatrix4x4 mat2 = eulerToMatrix(m_angles1);
+
+    lerpMatrices(result, mat1, mat2, t);
 
     return result;
+}
+
+void Exercise14::lerpMatrices(QMatrix4x4 &result, const QMatrix4x4 &mat1, const QMatrix4x4 &mat2, const float &t)
+{
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            lerp(result(i, j), mat1(i, j), mat2(i, j), t);
+        }
+    }
 }
 
 void Exercise14::slerp(
@@ -122,10 +131,26 @@ void Exercise14::lerp(
     const float & b,
     const float & t)
 {
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 14
-    // - Implement a linear interpolation between a and b as a function of t.
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    result = (1 - t) * a + t * b;
+}
+
+QMatrix4x4 Exercise14::eulerToMatrix(float const angles[3])
+{
+    float phi = angles[0];
+    float psi = angles[1];
+    float th = angles[2];
+
+    float values[16] = {
+            // row major order
+            (float) (cos(th)*cos(psi)), (float) (cos(th)*sin(psi)), (float) -sin(th), 0,
+            (float) (sin(phi)*sin(th)*cos(psi)-cos(phi)*sin(psi)),
+            (float) (sin(phi)*sin(th)*sin(psi)+cos(phi)*cos(psi)), (float) (sin(phi)*cos(th)), 0,
+            (float) (cos(phi)*sin(th)*cos(psi)+sin(phi)*sin(psi)),
+            (float) (cos(phi)*sin(th)*sin(psi)-sin(phi)*cos(psi)), (float) (cos(phi)*cos(th)), 0,
+            0, 0, 0, 1
+    };
+
+    return QMatrix4x4(values);
 }
 
 bool Exercise14::initialize()
@@ -142,8 +167,8 @@ bool Exercise14::initialize()
     m_angles0[1] = s.value("angle_y", 0.0f).toFloat();
     m_angles0[2] = s.value("angle_z", 0.0f).toFloat();
 
-    m_angles1[0] = 0.0f;
-    m_angles1[1] = 0.0f;
+    m_angles1[0] = -90.0f;
+    m_angles1[1] = 90.0f;
     m_angles1[2] = 0.0f;
 
     s.endGroup();

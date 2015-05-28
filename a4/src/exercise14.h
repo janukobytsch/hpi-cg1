@@ -28,6 +28,9 @@ protected:
     QMatrix4x4 interpolateQuaternion(const float t);
     QMatrix4x4 interpolateMatrix    (const float t);
 
+    static QMatrix4x4 eulerToMatrix(const float angles[3]);
+    static void lerpMatrices(QMatrix4x4 & result, const QMatrix4x4 & mat1, const QMatrix4x4 & mat2, const float & t);
+
     static void slerp(float c[4] /*out*/, const float a[4], const float b[4], const float& t);
 	static void lerp(
         float & result,
