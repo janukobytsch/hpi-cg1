@@ -131,7 +131,7 @@ QOpenGLShaderProgram* AbstractPainter::createBasicShaderProgram(const QString &v
 {
     QOpenGLShaderProgram * program = new QOpenGLShaderProgram();
     //program->create();
-    program->programId() // Qt below 5.3
+    program->programId(); // Qt below 5.3
 
     m_shaders << FileAssociatedShader::getOrCreate(
         QOpenGLShader::Vertex, vertexShaderFileName, *program);

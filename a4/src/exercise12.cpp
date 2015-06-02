@@ -38,15 +38,28 @@ Exercise12::~Exercise12()
 
 QMatrix4x4 Exercise12::rotateClockwise(int frame)
 {
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 12
-    // Apply correct transformations (rotate, translate, scale) with respect to the current frame
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
     QMatrix4x4 transform;
-
     transform.setToIdentity();
-    transform.translate(0.0, 1.0, 0.0);
+
+    const int position = frame % 360;
+
+    if (position <= 90) {
+        transform.translate(0.5f, 0.5f, 0.0f);
+        transform.rotate(-2*frame, 0.0f, 0.0f, 1.0f);
+        transform.translate(-0.5f, 0.5f, 0.0f);
+    } else if (position <= 180) {
+        transform.translate(0.5f, -0.5f, 0.0f);
+        transform.rotate(-2*frame, 0.0f, 0.0f, 1.0f);
+        transform.translate(-0.5f, -0.5f, 0.0f);
+    } else if (position <= 270) {
+        transform.translate(-0.5f, -0.5f, 0.0f);
+        transform.rotate(-2*frame, 0.0f, 0.0f, 1.0f);
+        transform.translate(0.5f, -0.5f, 0.0f);
+    } else if (position <= 360) {
+        transform.translate(-0.5f, 0.5f, 0.0f);
+        transform.rotate(-2*frame, 0.0f, 0.0f, 1.0f);
+        transform.translate(0.5f, 0.5f, 0.0f);
+    }
 
     return transform;
 }

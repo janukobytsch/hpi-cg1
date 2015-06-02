@@ -25,6 +25,8 @@
 
 #include "util/camera.h"
 
+#include <math.h>
+
 #include "exercise13.h"
 
 namespace 
@@ -45,32 +47,88 @@ Exercise13::~Exercise13()
         glDeleteTextures(1, &m_textureID);
 }
 
+float calculateVelocity(const float &t) {
+    const float gravitation = 9.8f;
+    return (float) (0.5 * gravitation * t);
+}
+
 QMatrix4x4 Exercise13::applyBallTransformation(const int frame)
 {
-    static const float fX = 0.01f;
-    static const int numFramesPerAnimation = static_cast<int>(4.0f / fX);
+    // environment
+    static const std::vector<float> left = {-0.9f, 0.8f, 0.0f};
+    static const std::vector<float> right = {0.9f, 0.4f, 0.0f};
+    static const std::vector<float> bottom = {0.0f, -1.05f, 0.0f};
 
+    // ball
     static const float r = 0.3f;
     static const float d = 0.3f * r;
+    static const std::vector<float> startPos = {-2.0f, left[1], 0.0f};
+    static const std::vector<float> endPos = {2.0f, right[1], 0.0f};
+    static const float ballSpeedX = 0.02f;
+    static const float angularSpeed = (float const) (-ballSpeedX/(r*2*M_PI)*360);
+    static bool isBounced = false;
+    static float x, y, z;
+    float scaleY = 1, scaleX = 1, scaleZ = 1;
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 13
-    // - Calculate correct translation, scaling and rotation matrices with respect to the current frame
-    // - The sphere's environment is defined as follows:
-    //              start at    x = -2.0 and y = 0.8
-    //              left  cliff x = -0.9
-    //              bottom at   y = -1.05;
-    //              right cliff x = +0.9 and y = 0.4
-    //              end at      x = +2.0
-    // - Apply matrices in the correct order, using matrix multiplication
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // animation
+    static const int numFramesPerAnimation = static_cast<int>(4.0f / ballSpeedX);
+    const int periodicity = frame % numFramesPerAnimation;
 
-    // const QMatrix4x4 translate({..})
-    // const QMatrix4x4 rotate({..})
-    // const QMatrix4x4 scale({..})
-    // return ... * ... * ...;
+    // restart animation
+    if (x >= endPos[0]) {
+        x = startPos[0];
+        y = startPos[1];
+        z = startPos[2];
+        isBounced = false;
+    }
 
-    return QMatrix4x4();
+    if (x <= left[0]) {
+        // clamp to cliff height
+        y = left[1] + r;
+    } else if (x > left[0] && x < right[0]) {
+        float tolerance = r/3;
+        if (y - r + tolerance <= bottom[1]) {
+            isBounced = true;
+        }
+        // scale ball
+        if (y - r <= bottom[1]) {
+            float delta = (bottom[1] - y - r) / tolerance;
+            float lerpScale = (1 - delta) * d + delta * d;
+            scaleX += lerpScale;
+            scaleY = lerpScale;
+            scaleZ += lerpScale;
+        }
+        // simulate gravitation and bounce
+        float delta = (x - left[0]) / (right[0] - left[0]);
+        if (!isBounced) {
+            int slope = 1500;
+            float velocityY = calculateVelocity(delta / (slope * ballSpeedX));
+            y -= velocityY;
+        } else {
+            int slope = 1200;
+            float velocityY = calculateVelocity((1-delta) / (slope * ballSpeedX));
+            y += velocityY;
+        }
+    } else if (x >= right[0]) {
+        // finish bounce and clamp to cliff height
+        int slope = 800;
+        float delta = (x - right[0]) / (endPos[0] - right[0]);
+        float velocityY = calculateVelocity(delta / (slope * ballSpeedX));
+        y -= velocityY;
+        y = (y <= right[1] + r) ? right[1] + r : y;
+    }
+
+    // roll the ball
+    x += ballSpeedX;
+
+    // apply transformations
+    QMatrix4x4 transform;
+    transform.setToIdentity();
+    transform.translate(x, y, z);
+    transform.scale(scaleX, scaleY, scaleZ);
+    transform.rotate(angularSpeed * periodicity, 0, 0, 1); // around z-axis
+
+    return transform;
 }
 
 void Exercise13::drawEnvironment()
