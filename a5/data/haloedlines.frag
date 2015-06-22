@@ -11,7 +11,7 @@
 // Diese Datei bearbeiten.
 //
 // Bearbeiter
-// Matr.-Nr: xxxxx
+// Matr.-Nr: 770755
 // Matr.-Nr: xxxxx
 //
 // ======================================
@@ -32,8 +32,8 @@ void main()
     // Adjust the color depending on the depth of the vertex.
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    
-    float z = gl_FragCoord.z;
+    // Hacky workaround because the distribution of the values is so small
+    float z = 1 -((gl_FragCoord.z - 0.95) * 20);
 
-    out_color = vec4(color.x, color.y, color.z*z, color.w * z);
+    out_color = vec4(z, z, z, 1);
 }
