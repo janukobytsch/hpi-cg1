@@ -40,6 +40,7 @@ void main()
 {
 	float angle = animationFrame * radians(360.0);
 	vec4 center = vec4(0,0,0,0);
+	float speed = 2.0f;
 
 	for (int i=0; i < 3; ++i){
 	   	vertex = gl_in[i].gl_Position;
@@ -55,19 +56,26 @@ void main()
         normal = normalize(geom_normal[i]);
         vertex = gl_in[i].gl_Position;
 
+        vec3 movement = vec3(normal.x * animationFrame, 
+        					normal.y * animationFrame, 
+    						normal.z * animationFrame);
+
 
 
         mat4 baseTransformation = mat4(1,0,0,0,0,1,0,0,0,0,1,0,-center.x,-center.y,-center.z,1);
 
-        mat4 rotation = mat4(cos(angle),-sin(angle),0,0,sin(angle),cos(angle),0,0,0,0,1,0,0,0,0,1);
+        mat4 rotation = mat4(cos(angle),sin(angle),0,0,-sin(angle),cos(angle),0,0,0,0,1,0,0,0,0,1);
 
-        mat4 reTransform = mat4(1,0,0,0,0,1,0,0,0,0,1,0,center.x,center.y,center.z,1);
+        mat4 reTransform = mat4(1,0,0,0,0,1,0,0,0,0,1,0,center.x,center.y ,center.z, 1);
 
-        mat4 transformation = mat4(1,0,0,normal.x * animationFrame,0,1,0,normal.y * animationFrame,0,0,1,normal.z * animationFrame,0,0,0,1);
+        mat4 transformation = 	mat4(1,0,0,0,
+        						0,1,0,0,
+        						0,0,1,0,
+        						normal.x * animationFrame * speed,normal.y * animationFrame * speed,normal.z * animationFrame * speed,1);
 
-        vertex =  vertex * baseTransformation * rotation * reTransform;
+        vertex =  (reTransform * rotation * baseTransformation)  * vertex;
 
-        vertex =  vertex * transformation;
+        vertex = transformation * vertex;
 
         gl_Position = viewprojection * vertex;
 
