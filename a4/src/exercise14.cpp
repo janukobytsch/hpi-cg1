@@ -78,16 +78,28 @@ QMatrix4x4 Exercise14::interpolateEuler(const float t)
 
 QMatrix4x4 Exercise14::interpolateQuaternion(const float t)
 {
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 14
-    // - Implement a spherical interpolation based on quaternions
-    // - hint: use the quat method to convert the matrices to quaternions
-    // - hint: use the axisAngle method to get the axis and the angle represented by a quaternion
-    // - hint: use the slerp method (to be defined below)
-    // - hint: use QMatrix4x4::rotate calls for applying the rotation(s)
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    QMatrix4x4 mat1 = eulerToMatrix(m_angles0);
+    QMatrix4x4 mat2 = eulerToMatrix(m_angles1);
+
+    float start[16];
+    float end[16];
+    mat1.copyDataTo(start);
+    mat2.copyDataTo(end);
+
+    float quat1[4], quat2[4];
+    quat(quat1, start);
+    quat(quat2, end);
+
+    float slerpedQuat[4];
+    slerp(slerpedQuat, quat1, quat2, t);
+
+    float angle;
+    float axis[3];
+    axisAngle(angle, axis, slerpedQuat);
 
     QMatrix4x4 result;
+    result.setToIdentity();
+    result.rotate(angle, axis[0], axis[1], axis[2]);
 
     return result;
 }
@@ -95,10 +107,10 @@ QMatrix4x4 Exercise14::interpolateQuaternion(const float t)
 QMatrix4x4 Exercise14::interpolateMatrix(const float t)
 {
     QMatrix4x4 result;
-    QMatrix4x4 mat1 = eulerToMatrix(m_angles0);
-    QMatrix4x4 mat2 = eulerToMatrix(m_angles1);
+    QMatrix4x4 start = eulerToMatrix(m_angles0);
+    QMatrix4x4 end = eulerToMatrix(m_angles1);
 
-    lerpMatrices(result, mat1, mat2, t);
+    lerpMatrices(result, start, end, t);
 
     return result;
 }
@@ -112,17 +124,28 @@ void Exercise14::lerpMatrices(QMatrix4x4 &result, const QMatrix4x4 &mat1, const 
     }
 }
 
+void Exercise14::applySlerp(float & result, const float & theta, const float & a, const float & b, const float & u)
+{
+    float coef1 = (float) (sin((1 - u) * theta) / sin(theta));
+    float coef2 = (float) (sin(u * theta) / sin(theta));
+    result = coef1 * a + coef2 * b;
+}
+
 void Exercise14::slerp(
     float result[4],
     const float a[4],
     const float b[4],
     const float & t)
 {
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 14
-    // - Implement the slerp function.
-    // - Keep in mind, that sin(x) might equal zero. Handle that case appropriately.
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    float theta = (float) acos(a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3]);
+
+    for (int i = 0; i < 4; ++i) {
+        if (theta == 0) {
+            lerp(result[i], a[i], b[i], t); // fallback
+        } else {
+            applySlerp(result[i], theta, a[i], b[i], t);
+        }
+    }
 }
 
 void Exercise14::lerp(

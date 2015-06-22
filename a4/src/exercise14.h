@@ -31,6 +31,7 @@ protected:
     static QMatrix4x4 eulerToMatrix(const float angles[3]);
     static void lerpMatrices(QMatrix4x4 & result, const QMatrix4x4 & mat1, const QMatrix4x4 & mat2, const float & t);
 
+    static void applySlerp(float & result, const float & theta, const float & a, const float & b, const float & u);
     static void slerp(float c[4] /*out*/, const float a[4], const float b[4], const float& t);
 	static void lerp(
         float & result,
