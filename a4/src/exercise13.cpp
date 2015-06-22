@@ -65,12 +65,12 @@ QMatrix4x4 Exercise13::applyBallTransformation(const int frame)
     // - Apply matrices in the correct order, using matrix multiplication
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // const QMatrix4x4 translate({..})
-    // const QMatrix4x4 rotate({..})
-    // const QMatrix4x4 scale({..})
+    // const QMatrix4x4 translate({..});
+     //const QMatrix4x4 rotate({..});
+     //const QMatrix4x4 scale({..});
     // return ... * ... * ...;
 
-    return QMatrix4x4();
+    return QMatrix4x4() ;
 }
 
 void Exercise13::drawEnvironment()

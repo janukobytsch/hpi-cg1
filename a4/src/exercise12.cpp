@@ -43,10 +43,19 @@ QMatrix4x4 Exercise12::rotateClockwise(int frame)
     // Apply correct transformations (rotate, translate, scale) with respect to the current frame
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
+    frame = frame % 360;
+
     QMatrix4x4 transform;
 
     transform.setToIdentity();
-    transform.translate(0.0, 1.0, 0.0);
+    transform.translate(0,1,0);
+    QMatrix4x4 rotation;
+    rotation.translate(-0.5,0,0);
+    QMatrix4x4 rotationHelper = rotation;
+    rotation.rotate(360 - frame, QVector3D(0,0,1));
+    rotationHelper.inverted();
+    rotation = rotation * rotationHelper;
+    transform = transform * rotation;
 
     return transform;
 }
