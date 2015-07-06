@@ -1,6 +1,12 @@
 
 #pragma once
 
+#ifdef __APPLE__
+#include <OpenGL/glu.h>
+#else
+#include <GL/glu.h>
+#endif
+
 #include "util/abstractexercise.h"
 
 #include <vector>
@@ -54,5 +60,5 @@ protected:
     void tessellatePolygons();
 
     ContourList m_contours;
-    //GLUtesselator* m_tesselator;
+    GLUtesselator* m_tesselator;
 };

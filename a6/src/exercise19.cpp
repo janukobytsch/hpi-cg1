@@ -69,7 +69,7 @@ void draw_lines(void) {
 
 void errorCallback(GLenum errorCode)
 {
-    //qWarning() << "Tessellation Error: " << gluErrorString(errorCode);
+    qWarning() << "Tessellation Error: " << gluErrorString(errorCode);
 }
 
 void beginCallback(GLenum prim)
@@ -112,6 +112,7 @@ Exercise19::Exercise19()
 
 Exercise19::~Exercise19()
 {
+    gluDeleteTess(m_tesselator);
 }
 
 void Exercise19::render()
@@ -141,7 +142,7 @@ bool Exercise19::initialize()
 
     glPointSize(2.f);
 
-    //m_tesselator = gluNewTess();
+    m_tesselator = gluNewTess();
 
     return true;
 }
@@ -188,7 +189,6 @@ void Exercise19::drawContours()
 
 void Exercise19::tessellatePolygons()
 {
-    GLUtesselator* m_tesselator = gluNewTess();
     gluTessCallback(m_tesselator, GLU_TESS_BEGIN, (GLvoid (*) ()) &beginCallback);
     gluTessCallback(m_tesselator, GLU_TESS_END, (GLvoid (*) ()) &endCallback);
     gluTessCallback(m_tesselator, GLU_TESS_VERTEX, (GLvoid (*) ()) &vertexCallback);
@@ -213,7 +213,6 @@ void Exercise19::tessellatePolygons()
         gluTessEndContour(m_tesselator);
     }
     gluTessEndPolygon(m_tesselator);
-    gluDeleteTess(m_tesselator);
 }
 
 bool Exercise19::onMouseReleased(QMouseEvent * mouseEvent)
