@@ -45,20 +45,47 @@ namespace
     GLenum g_primitive; // Current primitive type
 }
 
+void draw_shape(void) {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glColor3f(0.1f, 0.75f, 0.1f);
+    glBegin(g_primitive);
+    for (int i = 0; i < g_vertices.size(); ++i)
+    {
+        glVertex3d(g_vertices[i].x, g_vertices[i].y, g_vertices[i].z);
+    }
+    glEnd();
+}
+
+void draw_lines(void) {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(g_primitive);
+    for (int i = 0; i < g_vertices.size(); ++i)
+    {
+        glVertex3d(g_vertices[i].x, g_vertices[i].y, g_vertices[i].z);
+    }
+    glEnd();
+}
 
 void errorCallback(GLenum errorCode)
 {
-    qWarning() << "Tessellation Error: " << gluErrorString(errorCode);
+    //qWarning() << "Tessellation Error: " << gluErrorString(errorCode);
 }
 
 void beginCallback(GLenum prim)
 {
-    //TODO
+    g_vertices.clear();
+    g_primitive = prim;
+    //qDebug() << "beginCallback";
 }
 
 void vertexCallback(void * vdata)
 {
-    //TODO
+    const GLdouble *ptr;
+    ptr = (GLdouble *) vdata;
+    Vertex vertex(ptr[0], ptr[1], ptr[2]);
+    g_vertices.push_back(vertex);
+    //qDebug() << "vertexCallback";
 }
 
 void combineCallback(double coords[3], double vertex_data[4], float weight[4], double **dataOut)
@@ -67,13 +94,16 @@ void combineCallback(double coords[3], double vertex_data[4], float weight[4], d
     g_combinedVertices.push_back(vertex);
     Vertex &v = g_combinedVertices.back();
     *dataOut = &v.x;
+    //qDebug() << "combineCallback";
 }
 
 void endCallback(void)
 {
-    //TODO
+    draw_shape();
+    glClear(GL_DEPTH_BUFFER_BIT); // allow overdraw
+    draw_lines();
+    //qDebug() << "endCallback";
 }
-
 
 Exercise19::Exercise19()
 :   AbstractExercise()
@@ -88,14 +118,12 @@ void Exercise19::render()
 {
     glViewport(0, 0, m_viewport[0], m_viewport[1]);
 
-
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     glPushMatrix();
 
-    //TODO use these
-    //drawContours();
-    //tessellatePolygons();
+    tessellatePolygons();
+    drawContours();
 
     glPopMatrix();
 }
@@ -112,6 +140,8 @@ bool Exercise19::initialize()
     glEnable(GL_DEPTH_TEST);
 
     glPointSize(2.f);
+
+    //m_tesselator = gluNewTess();
 
     return true;
 }
@@ -158,7 +188,32 @@ void Exercise19::drawContours()
 
 void Exercise19::tessellatePolygons()
 {
-    //TODO
+    GLUtesselator* m_tesselator = gluNewTess();
+    gluTessCallback(m_tesselator, GLU_TESS_BEGIN, (GLvoid (*) ()) &beginCallback);
+    gluTessCallback(m_tesselator, GLU_TESS_END, (GLvoid (*) ()) &endCallback);
+    gluTessCallback(m_tesselator, GLU_TESS_VERTEX, (GLvoid (*) ()) &vertexCallback);
+    gluTessCallback(m_tesselator, GLU_TESS_COMBINE, (GLvoid(*)()) &combineCallback);
+    gluTessCallback(m_tesselator, GLU_TESS_ERROR, (GLvoid (*) ()) &errorCallback);
+
+    //gluTessProperty(m_tesselator, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD);
+
+    gluTessBeginPolygon(m_tesselator, NULL);
+    for (ContourList::iterator clit = m_contours.begin(); clit != m_contours.end(); ++clit)
+    {
+        Contour &currentContour = *clit;
+        gluTessBeginContour(m_tesselator);
+        for (Contour::iterator cit = currentContour.begin(); cit != currentContour.end(); ++cit)
+        {
+            double *vertex = new double[3];
+            vertex[0] = cit->x;
+            vertex[1] = cit->y;
+            vertex[2] = cit->z;
+            gluTessVertex(m_tesselator, vertex, vertex);
+        }
+        gluTessEndContour(m_tesselator);
+    }
+    gluTessEndPolygon(m_tesselator);
+    gluDeleteTess(m_tesselator);
 }
 
 bool Exercise19::onMouseReleased(QMouseEvent * mouseEvent)

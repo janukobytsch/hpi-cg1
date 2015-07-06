@@ -13,6 +13,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_traits_with_normals_3.h>
+#include <CGAL/Polyhedron_incremental_builder_3.h>
 
 typedef CGAL::Simple_cartesian<double>     Kernel;
 typedef CGAL::Polyhedron_traits_with_normals_3<Kernel> Traits;
@@ -61,4 +62,6 @@ protected:
     void prepareMesh(Polyhedron& poly);
     void updateMeshGL(Polyhedron& poly);
     void updateMesh();
+
+    void buildPolyhedron(CGAL::Polyhedron_incremental_builder_3<Polyhedron::HalfedgeDS> builder, int const numVertices, int const numFacets, float vetices[][3], float facets[][3]);
 };

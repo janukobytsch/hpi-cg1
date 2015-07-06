@@ -49,12 +49,12 @@ Exercise20::Exercise20(const float animationFrame)
     , m_subdivisionMode(SubdivisionMode::MODE_A)
     , m_polyhedronMode(PolyhedronMode::ICOSAHEDRON)
 {
-	//
+    //
 }
 
 Exercise20::~Exercise20()
 {
-	//
+    //
 }
 
 const QString Exercise20::hints() const
@@ -105,54 +105,149 @@ void Exercise20::updateMeshGL(Polyhedron& poly)
     m_normals.allocate(m_normalsRaw.data(), m_normalsRaw.size() * sizeof(glm::vec3));
 }
 
+void Exercise20::buildPolyhedron(CGAL::Polyhedron_incremental_builder_3<Polyhedron::HalfedgeDS> builder, int const numVertices, int const numFacets, float vertices[][3],
+                                 float facets[][3])
+{
+    const int numHalfedges = 2 * (numVertices + numFacets - 2);
+
+    builder.begin_surface(numVertices, numFacets, numHalfedges);
+    for (int i = 0; i < numVertices; ++i)
+    {
+        builder.add_vertex(Point_3(vertices[i][0], vertices[i][1], vertices[i][2]));
+    }
+
+    for(int i = 0; i < numFacets; ++i)
+    {
+        builder.begin_facet();
+        for(int j = 0; j < 3; ++j)
+        {
+            builder.add_vertex_to_facet(facets[i][j]);
+        }
+        builder.end_facet();
+    }
+    builder.end_surface();
+}
+
 Polyhedron Exercise20::createMesh()
 {
     Polyhedron poly;
-
     CGAL::Polyhedron_incremental_builder_3<Polyhedron::HalfedgeDS> builder(poly.hds(), true);
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 20 a)
-    // Create a regular icosahedron or a tetrahedron (depending on the member variable m_polyhedronMode)
-    // using the API of the Polyhedron_incremental_builder_3. Both the icosahedron and the
-    // tetrahedron should be centered to the origin.
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    if (m_polyhedronMode == PolyhedronMode::ICOSAHEDRON)
+    {
+        const int numVertices = 12;
+        const int numFacets = 20;
+        const float r = static_cast<float>(0.5f * (1 + sqrt(5)));
+
+        float vertices[numVertices][3] = {
+                0.0, 1.0, r,
+                0.0, 1.0, -r,
+                0.0, -1.0, r,
+                0.0, -1.0, -r,
+                1.0, r, 0.0,
+                1.0, -r, 0.0,
+                -1.0, r, 0.0,
+                -1.0, -r, 0.0,
+                r, 0.0, 1.0,
+                r, 0.0, -1.0,
+                -r, 0.0, 1.0,
+                -r, 0.0, -1.0
+        };
+        float facets[numFacets][3] = {
+                2, 10, 0,
+                2, 0, 8,
+                6, 0, 10,
+                0, 6, 4,
+                8, 0, 4,
+                4, 9, 8,
+                4, 6, 1,
+                4, 1, 9,
+                10, 11, 6,
+                11, 1, 6,
+                1, 3, 9,
+                1, 11, 3,
+                3, 5, 9,
+                9, 5, 8,
+                8, 5, 2,
+                11, 7, 3,
+                7, 11, 10,
+                7, 10, 2,
+                7, 2, 5,
+                7, 5, 3
+        };
+
+        buildPolyhedron(builder, numVertices, numFacets, vertices, facets);
+    }
+    else
+    {
+        const int numVertices = 4;
+        const int numFacets = 4;
+
+        float vertices[numVertices][3] = {
+                1.0, 1.0, 1.0,
+                1.0, -1.0, -1.0,
+                -1.0, 1.0, -1.0,
+                -1.0, -1.0, 1.0
+        };
+        float facets[numFacets][3] = {
+                0, 1, 2,
+                0, 3, 1,
+                0, 2, 3,
+                1, 3, 2
+        };
+
+        buildPolyhedron(builder, numVertices, numFacets, vertices, facets);
+    }
 
     return poly;
 }
 
 void Exercise20::prepareMesh(Polyhedron& poly)
 {
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 20 b)
-    // Refine the given polyhedron using two different subdivision methods.
-    // The number of iterations should depend on the member m_animationFrame and
-    // an appropriate constant factor, e.g., 8.
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    Point_3 p3Vertex;
+    glm::vec3 normal, vertex;
+    const int numIterations = m_animationFrame * 8;
 
-    if(m_subdivisionMode == SubdivisionMode::MODE_A)
+    if (m_subdivisionMode == SubdivisionMode::MODE_A)
     {
-        // TODO method A
+        CGAL::Subdivision_method_3::Loop_subdivision(poly, numIterations);
     }
     else
     {
-        // TODO method B
+        CGAL::Subdivision_method_3::Sqrt3_subdivision(poly, numIterations);
     }
 
-    std::transform(poly.facets_begin(), poly.facets_end(), poly.planes_begin(),
-        Normal_vector());
+    std::transform(poly.facets_begin(), poly.facets_end(), poly.planes_begin(), Normal_vector());
 
     m_verticesRaw.clear();
     m_normalsRaw.clear();
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 20 c)
     // Iterate over the half-edge-structure of the given polyhedron to fill the vertex array
-    // m_verticesRaw and the normals array m_normalsRaw. Both arrays use glm::vec3 as type.
-    // The vertices should be normalized to a length of 2. glm::normalize() may be useful.
-    // The normals are defined per face. Thus, each vertex uses the face normal of its corresponding face.
-    // Keep in mind, that the vertex and normal arrays use different point types than CGAL.
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    for (auto currentFacet = poly.facets_begin(); currentFacet != poly.facets_end(); ++currentFacet)
+    {
+        auto p3Normal = currentFacet->plane();
+        normal = glm::vec3(p3Normal.x(), p3Normal.y(), p3Normal.z());
+
+        // Iterate over vertices contained in current facet
+        for (auto currentVertex = currentFacet->facet_begin(); ;)
+        {
+            p3Vertex = currentVertex->vertex()->point();
+
+            // The vertices should be normalized to a length of 2
+            vertex = glm::normalize(glm::vec3(p3Vertex.x(), p3Vertex.y(), p3Vertex.z()));
+            vertex *= 2;
+
+            // The normals are defined per face. Thus, each vertex uses the face normal of its corresponding face.
+            m_normalsRaw.push_back(normal);
+            m_verticesRaw.push_back(vertex);
+
+            ++currentVertex;
+            if (currentVertex== currentFacet->facet_begin())
+            {
+                break;
+            }
+        }
+    }
 }
 
 void Exercise20::setAnimationFrame(const float animationFrame)

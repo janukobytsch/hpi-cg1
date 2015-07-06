@@ -54,4 +54,5 @@ protected:
     void tessellatePolygons();
 
     ContourList m_contours;
+    //GLUtesselator* m_tesselator;
 };
