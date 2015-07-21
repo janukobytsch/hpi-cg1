@@ -34,13 +34,25 @@ uniform float material_shininess;
 
 void main()
 {
-    ///////////////////////////////////////////////////////////////////
-    // TODO: Aufgabe 22
-    // Implement phong shading.
-    ///////////////////////////////////////////////////////////////////
-    
-    // write Total Color:
-    vec4 resultColor = vec4(0.0, 0.0, 0.0, 1.0); // only placeholder color
+    // Implement phong shading
+    vec4 ambient, diffuse, specular, phongColor;
 
-    out_color = clamp(resultColor,0.0,1.0);
+    vec3 surfaceNormal = normalize(normal);
+    vec3 lightDir = normalize(light_pos.xyz);
+    vec3 viewDir = normalize(vertex.xyz);
+    vec3 reflectionDir = normalize(2 * dot(surfaceNormal, lightDir) * surfaceNormal - lightDir);
+
+    float diffuseWeight = max(dot(surfaceNormal, lightDir), 0);
+    float specularWeight = pow(max(dot(reflectionDir, viewDir), 0), 64*material_shininess);
+
+    for (int i=0; i<4; i++)
+    {
+        ambient[i] = light_iAmbient[i] * material_ambient[i];
+        diffuse[i] = light_iDiffuse[i] * material_diffuse[i] * diffuseWeight;
+        specular[i] = light_iSpecular[i] * material_specular[i] * specularWeight;
+        // Attenuation and emission are not considered
+        phongColor[i] = ambient[i] + diffuse[i] + specular[i];
+    }
+
+    out_color = clamp(phongColor, 0.0, 1.0);
 }
